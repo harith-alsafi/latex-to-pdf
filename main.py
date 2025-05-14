@@ -6,6 +6,10 @@ import os
 import subprocess
 import uuid
 import base64
+import shutil
+
+def is_pdflatex_available() -> bool:
+    return shutil.which("pdflatex") is not None
 
 app = FastAPI()
 
@@ -24,6 +28,12 @@ class CompileRequest(BaseModel):
 
 @app.post("/compile")
 async def compile_latex(req: CompileRequest):
+    if not is_pdflatex_available():
+        return JSONResponse(
+            status_code=500,
+            content={"error": "pdflatex is not installed or not in PATH."}
+        )
+
     # Create user and template folders
     user_path = os.path.join(BASE_DIR, req.userId)
     template_path = os.path.join(user_path, req.templateId)
@@ -69,14 +79,13 @@ async def compile_latex(req: CompileRequest):
             command,
             shell=True,
             capture_output=True,
-            cwd=template_path,
             timeout=30
         )
 
         if proc.returncode != 0 or not os.path.exists(output_pdf):
             return JSONResponse(
                 status_code=400,
-                content={"error": "Compilation failed", "log": proc.stderr.decode()}
+                content={"error": "Compilation failed", "log": proc.stdout.decode() + proc.stderr.decode()}
             )
 
         return FileResponse(output_pdf, media_type="application/pdf", filename="output.pdf")

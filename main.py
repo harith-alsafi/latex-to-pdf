@@ -67,8 +67,8 @@ async def compile_latex(req: CompileRequest):
         return JSONResponse(status_code=400, content={"error": "No main LaTeX file specified."})
 
     # Compilation
-    output_pdf = os.path.join(template_path, "output.pdf")
-
+    output_pdf = os.path.join(template_path, main_tex_file.replace(".tex", ".pdf"))
+    
     try:
         if req.compileCommand:
             command = req.compileCommand

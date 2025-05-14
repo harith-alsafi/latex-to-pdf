@@ -83,6 +83,7 @@ async def compile_latex(req: CompileRequest):
         )
 
         if proc.returncode != 0 or not os.path.exists(output_pdf):
+            print("Compile error: ", proc.stdout.decode() + proc.stderr.decode())
             return JSONResponse(
                 status_code=400,
                 content={"error": "Compilation failed", "log": proc.stdout.decode() + proc.stderr.decode()}
